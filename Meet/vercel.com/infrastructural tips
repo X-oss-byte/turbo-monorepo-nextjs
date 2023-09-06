@@ -1,0 +1,39 @@
+https://vercel.com/docs/incremental-static-regeneration
+
+**vercel: nextjs can always deploy jobs to @vercel  
+
+**incremental static regeneration 
+<https://vercel.com/docs/incremental-static-regeneration#>
+
+**Incremental Static Regeneration is available on all plans
+<https://vercel.com/docs/accounts/plans>
+
+**Incremental Static Regeneration (ISR) allows you to create or update content on your site without redeploying. ISR's main benefits for developers include:
+
+Better Performance: Static pages can be consistently fast because ISR allows Vercel to cache generated pages in every region on our global Edge Network and persist files into durable storage
+Reduced Backend Load: ISR helps reduce backend load by using cached content to make fewer requests to your data sources
+Faster Builds: Pages can be generated when requested by a visitor or through an API instead of during the build, speeding up build times as your application grows
+ISR is available to applications built with:
+
+Next.js: <https://vercel.com/docs/incremental-static-regeneration#using-isr-with-next.js>
+SvelteKit: <https://vercel.com/docs/frameworks/sveltekit#incremental-static-regeneration-isr>
+Nuxt: <https://vercel.com/docs/frameworks/nuxt#incremental-static-regeneration-isr>
+
+Or any custom framework solution that implements the Build Output API
+ <https://vercel.com/docs/build-output-api/v3>
+Get started in minutes
+Explore ISR with a project template
+
+*Wordpress 
+~~~https://vercel.com/templates/next.js/isr-blog-nextjs-wordpress~~~
+*on demand ISR
+~~~httpss://vercel.com/templates/next.js/on-demand-incremental-static-regeneration~~~
+*sveltekit
+~~~https://vercel.com/templates/next.js/sveltekit-route-config~~~
+
+ view more template below 
+{~~~https://vercel.com/templates~~~}
+
+find nextjs page 👇
+
+~~~<https://vercel.com/docs/incremental-static-regeneration>~~
