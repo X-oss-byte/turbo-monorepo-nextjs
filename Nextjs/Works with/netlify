@@ -1,0 +1,108 @@
+Next.js on Netlify
+Last updated: June 1, 2023
+Next.js is a React-based open source framework that provides a hybrid static / server-side rendered model for enterprise-grade sites and applications.
+
+# Key features
+These Next.js features provide important benefits for sites and apps, including those built and deployed with Netlify.
+
+Page routing. Next.js boasts a file system-based routing structure. Organizing files and subdirectories within a pages directory automatically results in corresponding routes.
+
+Automatic API endpoints. For simpler API management, any file added to the pages/api directory is treated as an API endpoint with a corresponding API route. Netlify also offers advanced API routes.
+
+Preview mode. Netlify supports rendering a draft page from any data-fetching solution instead of building a statically-generated page to preview. This preview mode functionality eliminates waiting for a build to run before previewing new content.
+
+Hybrid or static. You can use a hybrid approach to generate content, choosing between server-side rendering or static generation on a per-page basis, or you can use next export to generate a completely static site.
+
+Image optimization. The next/image component allows you to automatically optimize images for your site on-demand, as they’re requested by users. On Netlify, next/image uses ipx and On-demand Builders.
+
+Incremental Static Regeneration (ISR). ISR on Netlify works with On-demand Builders to revalidate pages as needed without rebuilding your entire site. This enables faster builds, especially for very large projects.
+
+Internationalization. Netlify supports Next.js internationalized routing functionality for locale-specific options.
+
+# Next.js Runtime
+Netlify’s Next.js Runtime configures your site on Netlify to enable key Next.js functionality. It automatically generates serverless functions that handle server-side rendered (SSR) pages, incremental static regeneration (ISR), images, and Next.js features.
+
+# Redirects and rewrites
+Next.js Runtime supports Next.js rewrites and redirects. These are defined in your next.config.js file and support some features that are not included in Netlify redirects and rewrites.
+
+We recommend using Netlify redirects when possible because they are faster to evaluate. Rewrites are a little different. Generally with Next.js Runtime, you should use Next.js rewrites instead of Netlify rewrites.
+
+Avoid root-level rewrite
+Do not add a rewrite from the site root (such as from = "/") in netlify.toml or _redirects. Your root-level rewrite would take precedence over Next.js Runtime’s own rewrites and break routing on your site.
+
+Learn more on the Next.js redirects and rewrites on Netlify page.
+
+# Middleware
+Next.js Runtime supports Middleware, a feature in which functions run before a request has finished processing. Regular Next.js Middleware can be used to modify the request or replace the response. For example, it can change headers, rewrite the request path, or return a different response entirely.
+
+Beyond regular Middleware, Netlify’s Next.js Advanced Middleware, available in the @netlify/next library, gives improved access to requests and responses. This is similar to Netlify Edge Functions, but with some additional Next.js-specific helpers.
+
+Learn more on the Next.js Middleware on Netlify page.
+
+# Custom Headers
+Next.js Runtime supports Next.js custom headers. Custom headers work for SSR, static site generation (SSG), ISR pages, and IPX images. There’s no need to add custom headers in the Netlify configuration.
+
+# Optimize images with next/image
+next/image includes built-in performance optimization, like optimizing image size. Next.js Runtime uses an On-demand Builder function to handle image processing and caching. This processes an image on the first request which means it may take longer to load, but then the generated image is cached and served as a static file to future visitors for faster response times.
+
+#next/image and Edge Functions
+If you want to use Netlify Edge Functions to handle images on your site, you can opt in to this feature by setting the environment variable NEXT_FORCE_EDGE_IMAGES to true. This enables the Next.js Runtime to default to using an edge function for image content negotiation, which is necessary to deliver the optimal image format for the browser. Note that if you have the option to set specific scopes for your environment variables, the scope must include Builds to be available during the build process.
+
+By default, Next.js delivers WebP images, an image format with wide browser support that usually generates smaller files than PNG or JPG, if the browser supports it. You can configure the supported image formats in your next.config.js file.
+
+Limitations when you configure images in AVIF format
+Compared to WebP, images in AVIF format are more resource-heavy and time-consuming to generate. A 10 second timeout can occur the first time an image is requested. You can avoid this issue by either reducing the image size or switching to WebP format.
+
+To optimize image formats, make sure you haven’t opted out of Netlify Edge Functions, as that action will override the environment variable described above.
+
+# Limitations
+Large functions. During deployment, each unzipped function bundle is limited to 250 MB in size. Some functions generated by Next.js Runtime may exceed that limit and throw an error. The troubleshooting page has more information.
+
+Asset optimization. Don’t enable asset optimization on Netlify. Next.js automatically bundles your project and further optimization through Netlify can result in build issues for projects that use server-side rendering.
+
+Cache control for SSR pages isn’t supported. As an alternative, you can use incremental static regeneration (ISR) pages instead and leverage the caching functionality that comes with On-demand Builders on Netlify.
+
+# Suggested configuration values
+When you link a repository for a Next.js project, Netlify provides a suggested build command and publish directory: next build and .next.
+
+If you’re using the CLI to run Netlify Dev for a local development environment, Netlify suggests a dev command and port: next and 3000.
+
+You can override suggested values or set them in a configuration file instead, but suggested values from automatic framework detection may help simplify the process of setting up a Next.js site on Netlify.
+
+For manual configuration, check out the typical build settings for Next.js.
+
+serverless target deprecated
+The serverless and experimental-serverless-trace targets are deprecated in Next 12, and all builds with Next.js Runtime use the default server target. If you previously set the target in your next.config.js, you should remove it.
+
+# Edge Functions
+Edge Functions connect the Netlify platform and workflow with an open runtime standard at the network edge. This enables you to build fast, personalized web experiences with an ecosystem of development tools.
+
+For different ways to use Edge Functions with Next.js, check out the React Server Components and Edge middleware examples. You can also browse the full library of reference examples.
+
+Note that the Edge Functions feature has limits that you should be aware of. For example, edge functions won’t work for sites with Split Testing enabled.
+
+# NextAuth.js support
+NextAuth.js is a complete open source authentication solution for Next.js applications. When Next.js Runtime detects the next-auth package in your build, it automatically sets the NEXTAUTH_URL environment variable to your site’s canonical URL. If a custom base path is specified as part of your site configuration, this is included as part of the NEXTAUTH_URL.
+
+To use NextAuth.js, you need to set a NEXTAUTH_SECRET environment variable in the Netlify UI. This gives your site’s builds secure access to your NEXTAUTH_SECRET and value. Note that if you have the option to set specific scopes for your environment variables, the scope must include Builds to be available during the build process.
+
+# pnpm support
+If you’re planning to use pnpm with Next.js to manage dependencies, you must do one of the following:
+
+Set a PNPM_FLAGS environment variable with a value of --shamefully-hoist. This appends a --shamefully-hoist argument to the pnpm install command that Netlify runs.
+
+Enable public hoisting by adding an .npmrc file in the root of your project with this content:
+
+public-hoist-pattern[]=*
+
+Learn more about using pnpm on Netlify.
+
+# Troubleshooting
+If you run into issues running a Next.js app on Netlify, check out our troubleshooting page. You can also visit the Netlify Support Forums to see if others have encountered similar issues.
+
+# More resources
+Typical Next.js build settings
+Video: Next.js from the Ground Up
+Netlify Blog: Next.js posts
+Next.js framework documentation
+← Framework integrations
