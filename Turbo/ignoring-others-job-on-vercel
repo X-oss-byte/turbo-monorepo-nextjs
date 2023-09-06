@@ -1,0 +1,363 @@
+https://turbo-site-git-main.vercel.sh/repo/docs/core-concepts/monorepos/filtering#the-workspace-root
+
+    Filtering Workspaces
+Repo
+Docs
+Core Concepts
+Filtering Workspaces
+A monorepo can contain hundreds, or thousands, of workspaces. By default, running turbo run test from the root of the repository will execute the test task in all available workspaces.
+
+Turborepo supports a --filter flag that lets you select the workspaces you'd like to execute your task in.
+
+You can use it to:
+* Filter by workspace name
+* Filter by workspace directory
+* Include dependents and dependencies of matched workspaces
+* Execute tasks from the workspace root
+* Filter by changes in git historic way 
+* Exclude workspaces from selection
+
+Turbo running task against each workspace 
+Turborepo will run each task against each matched workspace, ensuring that any tasks which depend on it are run first, according to the pipeline specification in turbo.json.
+Filter Syntax
+Multiple filters
+You can specify more than one filter by passing multiple --filter flags to the command:
+turbo build --filter=my-pkg --filter=my-app
+
+Filter by workspace name
+When you want to run a script in only one workspace, you can use a single filter: --filter=my-pkg.
+# Build 'my-pkg', letting `turbo` infer task dependencies
+# from the pipeline defined in turbo.json
+turbo run build --filter=my-pkg
+ 
+# Build '@acme/bar', letting `turbo` infer task dependencies
+# from the pipeline defined in turbo.json
+turbo run build --filter=@acme/bar
+If you want to run tasks inside several workspaces with similar names, you can use glob syntax: --filter=*my-pkg*.
+# Build all workspaces that start with 'admin-', letting turbo infer task
+# dependencies from the pipeline defined in turbo.json
+turbo run build --filter=admin-*
+Scopes
+Some monorepos prepend their workspace names with a scope, such as @acme/ui and @acme/app. As long as the scope (@acme) is unique across the codebase, you may omit it from filters.
+- turbo run build --filter=@acme/ui
++ turbo run build --filter=ui
+Include dependents of matched workspaces
+Sometimes, you'll want to ensure that your shared package isn't affecting any downstream dependencies. For that, you can use --filter=...my-lib.
+If my-app depends on my-lib, ...my-lib will select my-app and my-lib.
+Including a ^ (...^my-lib) will select all of my-lib's dependents, but not my-lib itself.
+# Test 'my-lib' and everything that depends on 'my-lib'
+turbo run test --filter=...my-lib
+ 
+# Test everything that depends on 'my-lib', but not 'my-lib' itself
+turbo run test --filter=...^my-lib
+Include dependencies of matched workspaces
+Sometimes, you'll want to make sure that build is run in all of the dependencies of the lib you're targeting. For that, you can use --filter=my-app....
+If my-app depends on my-lib, my-app... will select my-app and my-lib.
+Including a ^ (my-app^...) will select all of my-app's dependencies, but not my-app itself.
+# Build 'my-app' and its dependencies
+turbo run build --filter=my-app...
+ 
+# Build 'my-app's dependencies, but not 'my-app' itself
+turbo run build --filter=my-app^...
+Filter by directory
+Useful for when you want to target a specific directory, not a workspace name. It supports:
+* Exact matches: --filter=./apps/docs
+* Globs: --filter='./apps/*'
+# Build all of the workspaces in the 'apps' directory
+turbo run build --filter='./apps/*'
+Combining with other syntaxes
+When combining directory filters with other syntaxes, enclose in {}. For example:
+# Build all of the workspaces in the 'libs' directory,
+# and all the workspaces that depends on them
+turbo run build --filter=...{./libs/*}
+Filter by changed workspaces
+You can run tasks on any workspaces which have changed since a certain commit. These need to be wrapped in [].
+For example, --filter=[HEAD^1] will select all workspaces that have changed in the most recent commit:
+# Test everything that changed in the last commit
+turbo run test --filter=[HEAD^1]
+Check a range of commits
+If you need to check a specific range of commits, rather than comparing to HEAD, you can set both ends of the comparison via [<from commit>...<to commit>].
+# Test each workspace that changed between 'main' and 'my-feature'
+turbo run test --filter=[main...my-feature]
+Ignoring changed files
+You can use --ignore to specify changed files to be ignored in the calculation of which workspaces have changed.
+Combining with other syntaxes
+You can additionally prepend the commit reference with ... to match the dependencies of other components against the changed workspaces. For instance, to select foo if any of foo's dependencies have changed in the last commit, you can pass --filter=foo...[HEAD^1].
+# Build everything that depends on changes in branch 'my-feature'
+turbo run build --filter=...[origin/my-feature]
+ 
+# Build '@foo/bar' if it or any of its dependencies
+# changed in the last commit
+turbo run build --filter=@foo/bar...[HEAD^1]
+You can even combine [] and {} syntax together:
+# Test each workspace in the '@scope' scope that
+# is in the 'packages' directory, if it has
+# changed in the last commit
+turbo run test --filter=@scope/*{./packages/*}[HEAD^1]
+The workspace root
+The monorepo's root can be selected using the token //.
+# Run the format script from the root "package.json" file:
+turbo run format --filter=//
+Excluding workspaces
+Prepend ! to the filter. Matched workspaces from the entire filter will be excluded from the set of targets. For example, match everything except @foo/bar: --filter=!@foo/bar. Note that you may need to escape ! as appropriate for your shell (e.g. \!).
+# Build everything except '@foo/bar'
+turbo run build --filter=!@foo/bar
+# Build all of the workspaces in the 'apps' directory, except the 'admin' workspace
+turbo run build --filter=./apps/* --filter=!admin
+Via global turbo
+If you are using a globally installed version of turbo, running from within a workspace automatically filters to that workspace's directory. That means running turbo run test --filter={./packages/shared} from the root of the repository is equivalent to running cd packages/shared && turbo run test.
+Running with an explicitly named workspace will always work from anywhere in the repository: turbo run test --filter=shared.
+Turborepo's Filter API design and docs were/are inspired by pnpm
+Last updated on 2 June 2023
+Task DependenciesCode Generation
+
+
+Repo
+
+Docs
+
+Core Concepts
+
+Monorepos
+
+Code Generation
+Code Generation
+Splitting your monorepo into individual workspaces is a great way to organize your code, speed up tasks, and improve the local development experience. With Turborepo's code generation, it's easy to generate new source code for packages, modules, and even individual UI components in a structured way that integrates with the rest of your repository.
+Add an Empty Workspace
+
+Add a new, empty app or package to your monorepo.
+turbo gen workspace
+
+
+View all available options for gen workspace.
+
+Copy an Existing Workspace
+
+You can use an existing workspace as a template for your new app or package. This works for both workspaces within your existing monorepo, and remote workspaces from other repositories (specified via GitHub URL).
+
+Create a new workspace in your monorepo by copying from an existing workspace in your repo.
+turbo gen workspace --copy
+
+
+Create a new workspace in your monorepo by copying from a remote workspace.
+1. turbo gen workspace --copy below ⬇️ link to google earth 🌍 (vercel) https://vercel.com using Nextjs
+
+https://github.c 
+
+ om/vercel/turbo/tree/main/examples/with-tailwind/packages/tailwind-config
+
+
+
+Note: When adding from a remote source, Turborepo is unable to verify that your repo has all of the required dependencies, and is using the correct package manager. In this case, some manual modifications may be required to get the new workspace working as expected within your repository.
+View all available options for gen workspace --copy.
+
+Custom Generators
+
+If a built-in generator does not fit your needs, you can create your own custom generator using Plop
+(opens in a new tab)
+configurations. Turborepo will automatically detect any generator configurations within your repo, and make them available to run from the command line.
+
+Note: While Turborepo Generators are built on top of Plop, they do not require plop to be installed as a dependency in your repo.
+While Turborepo understands all Plop configuration options and features, it provides a few additional features to improve the experience of writing generators within a repo configured with Turborepo.
+1. Generators are automatically discovered, loaded, and organized per workspace (no need to manually load them within a single configuration file)
+2. Generators are automatically run from the root of the workspace where they are defined
+3. Generators can be invoked from anywhere within your repo (or outside out it via the --root flag)
+4. Typescript generators are supported with zero configuration
+5. plop is not required to be installed as a depenendency of your repo
+
+Note: ESM dependencies are not currently supported within custom generators
+Getting Started
+
+To build and run a custom generator, run the following command from anywhere within your monorepo using Turborepo.
+turbo gen
+
+
+You'll be prompted to select an existing generator or to create one if you don't have any yet. You can also create your configuration manually at turbo/generators/config.ts (or config.js) at the root of your repo - or within any workspace.
+
+Note: If you are using Typescript, you will need to install the @turbo/gen
+(opens in a new tab)
+package as a devDependency to access the required TS types.
+For example, the following illustrates a monorepo with three generator configurations:
+- root
+- apps/web
+- packages/ui
+
+
+├── package.json
+├── turbo.json
+├── README.md
+├── apps
+│   └── web
+│       ├── package.json
+│       └── turbo
+│           └── generators
+│               ├── config.ts
+│               └── templates
+├── packages
+│   └── ui
+│       ├── package.json
+│       └── turbo
+│           └── generators
+│               ├── config.ts
+│               └── templates
+├── turbo
+│   └── generators
+│       ├── config.ts
+│       └── templates
+├── pnpm-lock.yaml
+└── pnpm-workspace.yaml
+
+
+Generators created within workspaces are automatically run from the workspace root, not the repo root, nor the location of the generator configuration.
+This makes your generators more simple to write. Creating a file at [workspace-root] only needs to be specified as <file> rather than ../../<file>.
+Learn more about creating custom generators using Plop
+(opens in a new tab)
+.
+Writing Generators
+
+A generator configuration file is a function that returns a Plop
+(opens in a new tab)
+configuration object. The configuration object is used to define the generator's prompts, and actions.
+In its simplest form, a generator configuration file looks like:
+turbo/generators/config.ts
+import type { PlopTypes } from "@turbo/gen";
+ 
+export default function generator(plop: PlopTypes.NodePlopAPI): void {
+  // create a generator
+  plop.setGenerator("Generator name", {
+    description: "Generator description",
+    // gather information from the user
+    prompts: [
+      ...
+    ],
+    // perform actions based on the prompts
+    actions: [
+      ...
+    ],
+  });
+}
+
+
+Prompts
+
+Prompts are written using Plop prompts
+(opens in a new tab)
+and are used to gather information from the user.
+Actions
+
+Actions can use built-in Plop actions
+(opens in a new tab)
+, or custom action functions
+(opens in a new tab)
+that you define yourself:
+turbo/generators/config.ts
+import type { PlopTypes } from "@turbo/gen";
+ 
+const customAction: PlopTypes.CustomActionFunction = async (answers) => {
+  // fetch data from a remote API
+  const results = await fetchRemoteData();
+  // add the response to the answers, making this data available to actions
+  answers.results = results;
+  // return a status string
+  return 'Finished data fetching!';
+}
+ 
+export default function generator(plop: PlopTypes.NodePlopAPI): void {
+  // create a generator
+  plop.setGenerator("Generator name", {
+    description: "Generator description",
+    prompts: [
+      ...
+    ],
+    actions: [
+      customAction
+      {/* actions now have access to `answers.results` */}
+      ...
+    ],
+  });
+}
+
+
+Running Generators
+
+Once you have created your generator configuration file, you can skip the selection prompt and directly run a specified generator with:
+turbo gen [generator-name]
+
+
+Arguments can also be passed directly to the generator prompts using --args
+turbo gen [generator-name] --args answer1 answer2 .
+<[Return required [generator-name]>
+Send name to this link <openworkspacesource@gmail.com> 
+
+
+
+See bypassing prompts
+(opens in a new tab)
+in the Plop documentation for more information.
+View all available options for gen.
+
+
+
+
+The vercel/turbo
+(opens in a new tab)
+monorepo contains several custom Turborepo generators that are used for our own development.
+* Create a new blog post (opens in a new tab) - Creates a new release blog post with live stats fetched from the NPM and Github API's.
+* Create a new code transform (opens in a new tab) 
+* - Creates a new code transform for @turbo/codemod (opens in a new tab) complete with all boilerplate and tests.
+
+Turborepo remix  Examples (buildchromium@hotmail.com)
+* examples/basic
+* 
+     
+
+https://github.com/vercel/turbo/blob/main/examples/basic/packages/ui/turbo/generators/config.ts remix @turbo/codemod(opens in a new tab) 
+
+
+	
+	
+
+Skipping Tasks
+Build caching can dramatically speed up your tasks - but you can do even better by using npx turbo-ignore. If your workspace is unaffected by your code changes, you can completely skip executing a task altogether.
+Let's say you want to skip the unit tests for your web workspace when there aren't any changes to your web application (or its package dependencies). If you are already using Remote Caching
+(opens in a new tab)
+, you will probably get a cache hit, but you would still spend time provisioning the CI container, installing npm dependencies, and other things that can take a while.
+Ideally, we would do a quick check to see if any of that work needs to happen in the first place.
+After we've checked out the repo, but before any other work, we can take a few seconds to check that our web tests have changed since the parent commit.
+npx turbo-ignore web --task=test
+
+
+This command will:
+1. Filter for the web workspace.
+2. Create the dry output for your test task compared to your parent commit.
+3. Parse the output to determine which packages have changed.
+4. Exit with a 1 code if changes are detected. Otherwise, exits with a 0.
+While you may have been able to hit a >>> FULL TURBO cache for this task, we just saved time with all of the other setup tasks required to run your CI.
+Using turbo-ignore
+
+To skip unaffected work, first ensure that your git history is available on the machine. Then, run npx turbo-ignore.
+turbo-ignore uses a combination of the --filter and --dry=json flags to find changes from the parent commit to the current commit to identify affected packages. By default, turbo-ignore finds the difference for the build task in the current working directory, but you can customize this behavior with flags.
+Here's an example of the command that will be built and run:
+npx turbo run build --filter=@example/web...3c8387ffd98b751305fe3f0284befdd00cbd4610 --dry=json
+
+
+Note that a dry run does not execute the build task. Instead, it checks your packages to see if your code changes will affect your build (or other task) in only a few seconds.
+If turbo-ignore finds that the task can be skipped, it will exit the process with a 0 code. If changes have been found, the process will exit with 1.
+
+On Vercel, the previously deployed SHA will be used instead of the parent commit.
+Customizing behavior
+
+To specify a workspace, you can add it to your command like:
+npx turbo-ignore web
+
+
+where web is your workspace's name running the default build task.
+If you'd like to change the task, use the --task flag to specify the task for the command that turbo-ignore will invoke.
+Using turbo-ignore on Vercel
+
+To use npx turbo-ignore on Vercel, you can use the Ignored Build Step
+(opens in a new tab)
+feature. Vercel will automatically infer the correct arguments to successfully run turbo-ignore.
+Customizing behavior
+
+On Vercel, you can specify the --fallback flag to give Vercel a git ref to compare against when the default comparison is not available. By default, Vercel compares to the most recently deployed SHA so this is useful for use cases like avoiding a deploy for the first commit to a branch.
